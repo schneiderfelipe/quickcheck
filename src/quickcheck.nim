@@ -1,7 +1,16 @@
-# This is just an example to get you started. A typical library package
-# exports the main API in this file. Note that you cannot rename this file
-# but you can remove it if you wish.
+import random
+import sugar
 
-proc add*(x, y: int): int =
-  ## Adds two files together.
-  return x + y
+proc arbitrary*(_: typedesc[char]): char =
+  rand(chr(32)..chr(128))
+
+# TODO: define and use coarbitrary
+
+proc arbitrary*(_: typedesc[string]): string =
+  for _ in 0..<10:
+    result.add arbitrary(char)
+
+import unittest
+proc quickcheck*[T](test: T -> bool) =
+  for _ in 0..<100:
+    check test(arbitrary(T))

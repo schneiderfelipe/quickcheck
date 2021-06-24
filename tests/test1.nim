@@ -5,8 +5,17 @@
 #
 # To run these tests, simply execute `nimble test`.
 
+import sugar
 import unittest
 
 import quickcheck
-test "can add":
-  check add(5, 5) == 10
+
+suite "utilities":
+  test "arbitraries":
+    check arbitrary(char) is char
+    check arbitrary(string) is string
+
+import algorithm
+suite "usage":
+  test "can reverse strings":
+    quickcheck ((s: string) -> bool => s.reversed.reversed == s)
