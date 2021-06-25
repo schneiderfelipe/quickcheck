@@ -83,7 +83,7 @@ suite "arbitrary containers":
     check arbitrary(seq[char]) != arbitrary(seq[char])
     check arbitrary(seq[string]) != arbitrary(seq[string])
 
-  # TODO: bitsets
+  # Bitsets?
 
 suite "arbitrary user-defined types":
   test "arbitrary type aliases":
@@ -92,12 +92,11 @@ suite "arbitrary user-defined types":
 
     check arbitrary(MyInteger) != arbitrary(MyInteger)
 
-  test "arbitrary distinct types":
-    type Dollars = distinct float
-    # TODO: make it work
-    # check arbitrary(Dollars) is Dollars
+  # test "arbitrary distinct types":
+  #   type Dollars = distinct float
+  #   check arbitrary(Dollars) is Dollars
 
-    # check arbitrary(Dollars) != arbitrary(Dollars)
+  #   check arbitrary(Dollars) != arbitrary(Dollars)
 
   test "arbitrary enums":
     type CompassDirections = enum
@@ -106,13 +105,12 @@ suite "arbitrary user-defined types":
 
     check arbitrary(CompassDirections) != arbitrary(CompassDirections)
 
-  # TODO: tuples
+  # Tuples?
 
-  test "arbitrary objects":
-    type Animal = object
-      name, species: string
-      age: int
-    # TODO: make it work
-    # check arbitrary(Animal) is Animal
+  # test "arbitrary objects":
+  #   type Animal = object
+  #     name, species: string
+  #     age: int
+  #   check arbitrary(Animal) is Animal
 
-    # check arbitrary(Animal) != arbitrary(Animal)
+  #   check arbitrary(Animal) != arbitrary(Animal)
