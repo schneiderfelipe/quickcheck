@@ -26,11 +26,13 @@ template arbitrary*(T: typedesc[array]): auto =
     result[i] = arbitrary(elementType(result))
   result
 
-# proc arbitrary*(_: typedesc[string]): string =
-#   for _ in 0..<10:
-#     result.add arbitrary(char)
-
 import unittest
 proc quickcheck*[T](test: T -> bool) =
-  for _ in 0..<100:
-    check test(arbitrary(T))
+  const n = 100
+  for i in 0..<n:
+    try:
+      check test(arbitrary(T))
+    except:
+      echo "*** Failed! Falsifiable (after " & $i & " test):"
+      return
+  echo "+++ OK, passed " & $n & " tests."

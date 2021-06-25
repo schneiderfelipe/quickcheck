@@ -5,9 +5,12 @@
 #
 # To run these tests, simply execute `nimble test`.
 
+import random
 import unittest
 
 import quickcheck
+
+randomize()
 
 suite "arbitrary primitives":
   test "arbitrary signed integers":
@@ -99,11 +102,11 @@ suite "arbitrary user-defined types":
   #   check arbitrary(Dollars) != arbitrary(Dollars)
 
   test "arbitrary enums":
-    type CompassDirections = enum
-      cdNorth, cdEast, cdSouth, cdWest
-    check arbitrary(CompassDirections) is CompassDirections
+    type Animal = enum
+      Dog, Cat, Bird, Pig, Cow, Monkey, Human, Goat, Donkey, Fish, Horse, Bee
+    check arbitrary(Animal) is Animal
 
-    check arbitrary(CompassDirections) != arbitrary(CompassDirections)
+    check arbitrary(Animal) != arbitrary(Animal)
 
   # Tuples?
 
