@@ -57,14 +57,31 @@ suite "arbitrary containers":
     check arbitrary(string) != arbitrary(string)
 
   test "arbitrary arrays":
-    check arbitrary(array[10, int]) is array
+    const n = 10
+    check arbitrary(array[n, int]) is array
+    check arbitrary(array[n, uint]) is array
+    check arbitrary(array[n, float]) is array
+    check arbitrary(array[n, char]) is array
+    check arbitrary(array[n, string]) is array
 
-    check arbitrary(array[10, int]) != arbitrary(array[10, int])
+    check arbitrary(array[n, int]) != arbitrary(array[n, int])
+    check arbitrary(array[n, uint]) != arbitrary(array[n, uint])
+    check arbitrary(array[n, float]) != arbitrary(array[n, float])
+    check arbitrary(array[n, char]) != arbitrary(array[n, char])
+    check arbitrary(array[n, string]) != arbitrary(array[n, string])
 
   test "arbitrary sequences":
     check arbitrary(seq[int]) is seq
+    check arbitrary(seq[uint]) is seq
+    check arbitrary(seq[float]) is seq
+    check arbitrary(seq[char]) is seq
+    check arbitrary(seq[string]) is seq
 
     check arbitrary(seq[int]) != arbitrary(seq[int])
+    check arbitrary(seq[uint]) != arbitrary(seq[uint])
+    check arbitrary(seq[float]) != arbitrary(seq[float])
+    check arbitrary(seq[char]) != arbitrary(seq[char])
+    check arbitrary(seq[string]) != arbitrary(seq[string])
 
   # TODO: bitsets
 
