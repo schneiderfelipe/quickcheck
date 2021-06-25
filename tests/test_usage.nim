@@ -3,6 +3,7 @@ import unittest
 import algorithm
 import math
 import random
+import sequtils
 import sugar
 
 import quickcheck
@@ -32,8 +33,12 @@ suite "usage":
 
   test "can take five":
     func take5[T](xs: openArray[T]): seq[T] =
-      # if len(xs) > 5:
-        xs[0..<5]
-      # else:
-      #   xs
-    check quick ((s: string) => len(s.take5) <= 5)
+      let ys = xs.filter(x => x in {'a'..'e'})
+      if len(ys) > 5:
+        ys[0..<5]
+      else:
+        @ys
+    check:
+      quick ((s: string) => len(s.take5) <= 5)
+      quick ((s: string) => s.take5.all(x => x in {'a'..'d'}))
+      quick ((s: string) => s.take5.all(x => x in {'a'..'e'}))
