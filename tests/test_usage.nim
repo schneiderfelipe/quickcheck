@@ -1,7 +1,9 @@
+import unittest
+
 import algorithm
+import math
 import random
 import sugar
-import unittest
 
 import quickcheck
 
@@ -12,8 +14,21 @@ import quickcheck
 randomize()
 
 suite "usage":
+  test "fnord":
+    check 1 == 0
+
+  test "quick fnord":
+    check quick ((_: int) => 1 == 0)
+
+  test "quick fnord2":
+    check quick do (_: int) -> auto:
+      1 == 0
+
+  test "squares are positive":
+    check quick ((i: int) => i^2 > 0)
+
   test "can reverse strings":
-    quickcheck ((s: string) -> bool => s.reversed.reversed == s)
+    check quick ((s: string) => s.reversed.reversed == s)
 
   test "can take five":
     func take5[T](xs: openArray[T]): seq[T] =
@@ -21,4 +36,4 @@ suite "usage":
         xs[0..<5]
       # else:
       #   xs
-    quickcheck ((s: string) -> bool => len(s.take5) <= 5)
+    check quick ((s: string) => len(s.take5) <= 5)

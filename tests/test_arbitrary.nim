@@ -102,11 +102,11 @@ suite "arbitrary user-defined types":
   #   check arbitrary(Dollars) != arbitrary(Dollars)
 
   test "arbitrary enums":
-    type Animal = enum
-      Dog, Cat, Bird, Pig, Cow, Monkey, Human, Goat, Donkey, Fish, Horse, Bee
-    check arbitrary(Animal) is Animal
+    type Letter = enum
+      A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X, Y, W, Z
+    check arbitrary(Letter) is Letter
 
-    check arbitrary(Animal) != arbitrary(Animal)
+    check arbitrary(Letter) != arbitrary(Letter)
 
   # Tuples?
 
