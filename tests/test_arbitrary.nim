@@ -9,7 +9,7 @@ import unittest
 
 import quickcheck
 
-suite "arbitraries":
+suite "arbitrary primitives":
   test "arbitrary signed integers":
     check arbitrary(int8) is int8
     check arbitrary(int16) is int16
@@ -50,6 +50,7 @@ suite "arbitraries":
 
     check arbitrary(char) != arbitrary(char)
 
+suite "arbitrary containers":
   test "arbitrary strings":
     check arbitrary(string) is string
 
@@ -67,6 +68,7 @@ suite "arbitraries":
 
   # TODO: bitsets
 
+suite "arbitrary user-defined types":
   test "arbitrary type aliases":
     type MyInteger = int
     check arbitrary(MyInteger) is MyInteger
