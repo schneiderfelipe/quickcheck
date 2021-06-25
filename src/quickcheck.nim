@@ -1,9 +1,12 @@
-import random
 import strformat
 import sugar
+import terminal
 import typetraits
+import random
 
-# # TODO: define and use coarbitrary?
+const prefix = "  "
+
+# TODO: define and use coarbitrary?
 
 template arbitrary*(T: typedesc): auto =
   var result: T
@@ -28,22 +31,30 @@ template arbitrary*(T: typedesc[array]): auto =
   result
 
 
-func fail[T](i:int, x: T, headline = "Failed"): string =
+
+
+
+
+proc failed[T](i:int, x: T, raised = false) =
+  let headline = if not raised: "Failed" else: "Raised"
   let s = if i > 1: "s" else: ""
-  result = &"*** {headline}! Falsifiable (after {i} test{s}):\n"
-  result.addQuoted(x)
+  stdout.styledWriteLine(styleBright, fgMagenta, prefix, "*** ", resetStyle, &"{headline}! Falsifiable (after {i} test{s}):")
+
+  var line: string = prefix & prefix
+  line.addQuoted(x)
+  echo line
 
 
-func success(n: int): string =
-  &"+++ OK, passed {n} tests."
+proc succeeded(n: int) =
+  stdout.styledWriteLine(styleBright, fgCyan, prefix, "+++ ", resetStyle, &"OK, passed {n} tests.")
 
 
 proc quick*[T](f: T -> bool): bool =
-  template test(i: int, x: T): bool =
+  proc test(i: int, x: T): bool =
     try:
       f(x)
     except:
-      debugEcho fail(i, x, "Raised")
+      failed(i, x, raised = true)
       raise
 
   var x: T
@@ -51,7 +62,7 @@ proc quick*[T](f: T -> bool): bool =
   for i in 1..n:
     x = arbitrary(T)
     if not test(i, x):
-      debugEcho fail(i, x)
+      failed(i, x)
       return false
-  debugEcho success(n)
+  succeeded(n)
   return true

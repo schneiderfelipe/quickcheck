@@ -5,12 +5,9 @@
 #
 # To run these tests, simply execute `nimble test`.
 
-import random
 import unittest
 
 import quickcheck
-
-randomize()
 
 suite "arbitrary primitives":
   test "arbitrary signed integers":

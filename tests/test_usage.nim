@@ -1,18 +1,15 @@
-import unittest
-
 import algorithm
 import math
-import random
 import sequtils
 import sugar
+
+import unittest
 
 import quickcheck
 
 # func debugTrace[T](x: T): T =
 #   debugEcho x
 #   x
-
-randomize()
 
 suite "usage":
   test "fnord":
