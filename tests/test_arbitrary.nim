@@ -17,6 +17,12 @@ suite "arbitraries":
     check arbitrary(int64) is int64
     check arbitrary(int) is int
 
+    check arbitrary(int8) != arbitrary(int8)
+    check arbitrary(int16) != arbitrary(int16)
+    check arbitrary(int32) != arbitrary(int32)
+    check arbitrary(int64) != arbitrary(int64)
+    check arbitrary(int) != arbitrary(int)
+
   test "arbitrary unsigned integers":
     check arbitrary(uint8) is uint8
     check arbitrary(uint16) is uint16
@@ -24,22 +30,40 @@ suite "arbitraries":
     check arbitrary(uint64) is uint64
     check arbitrary(uint) is uint
 
+    check arbitrary(uint8) != arbitrary(uint8)
+    check arbitrary(uint16) != arbitrary(uint16)
+    check arbitrary(uint32) != arbitrary(uint32)
+    check arbitrary(uint64) != arbitrary(uint64)
+    check arbitrary(uint) != arbitrary(uint)
+
   test "arbitrary floats":
     check arbitrary(float32) is float32
     check arbitrary(float64) is float64
     check arbitrary(float) is float
 
+    check arbitrary(float32) != arbitrary(float32)
+    check arbitrary(float64) != arbitrary(float64)
+    check arbitrary(float) != arbitrary(float)
+
   test "arbitrary chars":
     check arbitrary(char) is char
+
+    check arbitrary(char) != arbitrary(char)
 
   test "arbitrary strings":
     check arbitrary(string) is string
 
+    check arbitrary(string) != arbitrary(string)
+
   test "arbitrary arrays":
     check arbitrary(array[10, int]) is array
 
+    check arbitrary(array[10, int]) != arbitrary(array[10, int])
+
   test "arbitrary sequences":
     check arbitrary(seq[int]) is seq
+
+    check arbitrary(seq[int]) != arbitrary(seq[int])
 
   # TODO: bitsets
 
@@ -47,15 +71,21 @@ suite "arbitraries":
     type MyInteger = int
     check arbitrary(MyInteger) is MyInteger
 
+    check arbitrary(MyInteger) != arbitrary(MyInteger)
+
   test "arbitrary distinct types":
     type Dollars = distinct float
     # TODO: make it work
     # check arbitrary(Dollars) is Dollars
 
+    # check arbitrary(Dollars) != arbitrary(Dollars)
+
   test "arbitrary enums":
     type CompassDirections = enum
       cdNorth, cdEast, cdSouth, cdWest
     check arbitrary(CompassDirections) is CompassDirections
+
+    check arbitrary(CompassDirections) != arbitrary(CompassDirections)
 
   # TODO: tuples
 
@@ -65,3 +95,5 @@ suite "arbitraries":
       age: int
     # TODO: make it work
     # check arbitrary(Animal) is Animal
+
+    # check arbitrary(Animal) != arbitrary(Animal)
