@@ -1,6 +1,8 @@
 import
   random,
   strformat,
+  sugar,
+  tables,
   typetraits
 
 # TODO: define and use coarbitrary?
@@ -25,4 +27,12 @@ template arbitrary*(T: typedesc[array]): auto =
   var result: T
   for i in low(T)..high(T):
     result[i] = arbitrary(elementType(result))
+  result
+
+proc arbitrary*[R, S](T: typedesc[R -> S]): auto =
+  var cache: Table[R, S]
+  let result = proc(x: R): S =
+    if x notin cache:
+      cache[x] = arbitrary(S)
+    cache[x]
   result
