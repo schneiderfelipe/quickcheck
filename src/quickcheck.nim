@@ -1,14 +1,32 @@
 import random
 import sugar
+import typetraits
 
-proc arbitrary*(_: typedesc[char]): char =
-  rand(chr(32)..chr(128))
+# # TODO: define and use coarbitrary?
 
-# TODO: define and use coarbitrary
+template arbitrary*(T: typedesc): auto =
+  var result: T
+  when compiles(rand(T)):
+    result = rand(T)
+  elif compiles(rand(low(T)..high(T))):
+    result = rand(low(T)..high(T))
+  elif compiles(elementType(result)):
+    for _ in 0'u8..<arbitrary(uint8):
+      result.add arbitrary(elementType(result))
+  else:
+    raise newException(ValueError, "cannot generate arbitrary " & $T)
+  # debugEcho result
+  result
 
-proc arbitrary*(_: typedesc[string]): string =
-  for _ in 0..<10:
-    result.add arbitrary(char)
+template arbitrary*(T: typedesc[array]): auto =
+  var result: T
+  for i in low(T)..high(T):
+    result[i] = arbitrary(elementType(result))
+  result
+
+# proc arbitrary*(_: typedesc[string]): string =
+#   for _ in 0..<10:
+#     result.add arbitrary(char)
 
 import unittest
 proc quickcheck*[T](test: T -> bool) =
