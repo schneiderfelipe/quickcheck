@@ -5,6 +5,12 @@ import
 
 import arbitraries
 
+type
+  Testable[T; S: bool | Testable] =
+    T -> S
+    ## A `Testable` of type `T` is a function that receives a value of type
+    ## `T` and either returns a `bool` or another `Testable`.
+
 const prefix = "  "
 
 # TODO: receive some kind of Reason object that stores the reasons of the
@@ -62,9 +68,8 @@ proc succeeded(n: int) =
 # bool or another property. Or, this is the Testable type and the Property
 # type is something else.
 
-# TODO: too much repeated code in quick procs. We might need a single one or
-# two, the current design doesn't scale well.
-proc quick*[T](f: T -> bool): bool =
+proc quick*[T](f: Testable[T,bool]): bool =
+  ## Test a `Testable` property by randomly choosing data for its parameters.
   template test(i: int, x: T): bool =
     try:
       f(x)
@@ -83,6 +88,24 @@ proc quick*[T](f: T -> bool): bool =
   succeeded(n)
   return true
 
+proc quick*[S: Testable,T](f: Testable[T,S]): bool =
+  var x: T
+  const n = 100
+  for i in 1..n:
+    x = arbitrary(T)
+    if not quick(f(x)):
+      failed(i, (x,))
+      return false
+  succeeded(n)
+  return true
+
+# For now, we have to convert. See <https://forum.nim-lang.org/t/8157>. I'm
+# open to better solutions.
+proc quick*[T,S](f: T -> S): bool =
+  quick(Testable(f))
+
+# TODO: too much repeated code in quick procs. We might need a single one or
+# two, the current design doesn't scale well.
 proc quick*[S, T](f: (S, T) -> bool): bool =
   template test(i: int, x: S, y: T): bool =
     try:
