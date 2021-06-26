@@ -7,7 +7,7 @@
 
 import unittest
 
-import quickcheck/arbitrary
+import quickcheck/arbitraries
 
 suite "arbitrary primitives":
   test "arbitrary signed integers":
