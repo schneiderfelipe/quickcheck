@@ -107,6 +107,10 @@ proc quick*[T,S](f: T -> S): bool =
 # TODO: too much repeated code in quick procs. We might need a single one or
 # two, the current design doesn't scale well.
 proc quick*[S, T](f: (S, T) -> bool): bool =
+  # THE FOLLOWING IS BROKEN
+  # # TODO: currying is becoming important!
+  # quick do (x: S) -> Testable[T,bool]:
+  #   (y: T) => f(x, y)
   template test(i: int, x: S, y: T): bool =
     try:
       f(x, y)
