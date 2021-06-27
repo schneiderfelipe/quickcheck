@@ -16,52 +16,37 @@ proc some*(_: typedesc[int]): int =
 
 
 type
-  Property[T: Arbitrary | void] = object
+  Property[T: Arbitrary, R: Property | bool] = object
     ## A `Property` is a representation of a statement about some data.
-    test: T -> bool
+    ## Properties are curried by default.
+    test: T -> R
 
-func property*(b: bool): auto =
-  ## A `Property` without any input, constructed from a `bool`.
-  Property[void](test: () => b)
+  Testable* = concept t
+    ## A `Testable` is any type that can be converted to a `Property`
+    property(t) is Property
 
-func property*(f: () -> bool): auto =
-  ## A `Property` without any input.
-  Property[void](test: f)
-
-func property*[T](f: T -> bool): auto =
-  ## A `Property` with a single input.
-  Property[T](test: f)
 
 func property*(p: Property): auto =
   ## Return the given `Property`.
   p
 
-proc evaluate(p: Property[void]): bool =
-  ## Evaluate a property without any input once.
-  p.test()
+func property*[T; R: Property | bool](f: T -> R): auto =
+  ## A `Property` with a single input.
+  Property[T,R](test: f)
 
-proc evaluate[T](p: Property[T]): (bool, T) =
+
+proc evaluate[T](p: Property[T,bool]): (bool, T) =
   ## Evaluate a property with a single input once.
   let x = some(T)
   (p.test(x), x)
 
 
-type
-  Testable* = concept t
-    ## A `Testable` is any type that can be converted to a `Property`
-    property(t) is Property
-
-proc satisfy*(n: Natural, p: Property[void]): bool =
-  var flag = evaluate p
-  for i in 1..n:
-    if not flag:
-      echo &"Failed test no. {i}."
-      return false
-    flag = evaluate p
-  echo &"Passed {n} tests."
+proc satisfy*(b: bool): bool =
+  if not b:
+    return false
   return true
 
-proc satisfy*[T](n: Natural, p: Property[T]): bool =
+proc satisfy*[T](n: Natural, p: Property[T,bool]): bool =
   var (flag, x) = evaluate p
   for i in 1..n:
     if not flag:
