@@ -40,9 +40,10 @@ proc evaluate(p: Property[void]): bool =
   ## Evaluate a property without any input once.
   p.test()
 
-proc evaluate[T](p: Property[T]): bool =
+proc evaluate[T](p: Property[T]): (bool, T) =
   ## Evaluate a property with a single input once.
-  p.test(some(T))
+  let x = some(T)
+  (p.test(x), x)
 
 
 type
@@ -50,16 +51,31 @@ type
     ## A `Testable` is any type that can be converted to a `Property`
     property(t) is Property
 
+proc satisfy*(n: Natural, p: Property[void]): bool =
+  var flag = evaluate p
+  for i in 1..n:
+    if not flag:
+      echo &"Failed test no. {i}."
+      return false
+    flag = evaluate p
+  echo &"Passed {n} tests."
+  return true
+
+proc satisfy*[T](n: Natural, p: Property[T]): bool =
+  var (flag, x) = evaluate p
+  for i in 1..n:
+    if not flag:
+      echo &"Failed test no. {i}."
+      echo &"there exists {x} such that"
+      return false
+    (flag, x) = evaluate p
+  echo &"Passed {n} tests."
+  return true
+
 proc satisfy*(n: Natural, t: Testable): bool =
   ## Convert a `Testable` into a `Property` and determine whether the
   ## `Property` is satisfied.
-  let p = property t
-  for i in 1..n:
-    if not evaluate p:
-      echo &"Failed after {i} tests."
-      return false
-  echo &"Passed {n} tests."
-  return true
+  satisfy(n, property t)
 
 proc satisfy*(t: Testable): bool =
   ## Convert a `Testable` into a `Property` and determine whether the
