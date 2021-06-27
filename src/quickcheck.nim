@@ -1,7 +1,19 @@
-import sugar
+import
+  random,
+  sugar
 
 type
-  Property[T] = object
+  Arbitrary* {.explain.} = concept a
+    ## An `Arbitrary` type is any type `T` for which `some(T)` returns an
+    ## arbitrary value of type `T`.
+    some(typeof(a)) is typeof(a)
+
+proc some*(_: typedesc[int]): int =
+  ## Generate an arbitrary `int`.
+  rand(int)
+
+type
+  Property[T: Arbitrary | void] = object
     ## A `Property` is a representation of a statement about some data.
     test: T -> bool
 
@@ -30,9 +42,9 @@ proc evaluate[T](p: Property[T]): bool =
   p.test(1)
 
 type
-  Testable* = concept a
+  Testable* {.explain.} = concept t
     ## A `Testable` is any type that can be converted to a `Property`
-    property(a) is Property
+    property(t) is Property
 
 proc satisfy*(t: Testable): bool =
   ## Convert a `Testable` into a `Property` and determine whether the

@@ -1,9 +1,12 @@
-import unittest, quickcheck
 import
   sugar,
   unittest
 
 import quickcheck
+
+suite "Arbitrary types":
+  test "Integers are arbitraries":
+    check int is Arbitrary
 
 suite "Testable types":
   test "Booleans are testable":
