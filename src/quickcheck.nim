@@ -2,6 +2,7 @@ import
   random,
   sugar
 
+
 type
   Arbitrary* {.explain.} = concept a
     ## An `Arbitrary` type is any type `T` for which `some(T)` returns an
@@ -11,6 +12,7 @@ type
 proc some*(_: typedesc[int]): int =
   ## Generate an arbitrary `int`.
   rand(int)
+
 
 type
   Property[T: Arbitrary | void] = object
@@ -39,15 +41,21 @@ proc evaluate(p: Property[void]): bool =
 
 proc evaluate[T](p: Property[T]): bool =
   ## Evaluate a property with a single input once.
-  p.test(1)
+  p.test(some(T))
+
 
 type
   Testable* {.explain.} = concept t
     ## A `Testable` is any type that can be converted to a `Property`
     property(t) is Property
 
-proc satisfy*(t: Testable): bool =
+proc satisfy*(n: int, t: Testable): bool =
   ## Convert a `Testable` into a `Property` and determine whether the
   ## `Property` is satisfied.
   let p = property t
   evaluate p
+
+proc satisfy*(t: Testable): bool =
+  ## Convert a `Testable` into a `Property` and determine whether the
+  ## `Property` is satisfied. By default, 100 tests are attempted.
+  satisfy(n = 100, t)
