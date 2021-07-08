@@ -2,7 +2,7 @@
 
 version       = "0.1.0"
 author        = "Felipe S. S. Schneider"
-description   = "Property-based testing for Nim."
+description   = "Property-based, type-based testing for Nim."
 license       = "MIT"
 srcDir        = "src"
 
