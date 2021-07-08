@@ -1,68 +1,50 @@
-import
-  random,
-  strformat,
-  sugar
+import macros, random, strformat
 
 
-type
-  Arbitrary* = concept a
-    ## An `Arbitrary` type is any type `T` for which `some(T)` returns an
-    ## arbitrary value of type `T`.
-    some(typeof(a)) is typeof(a)
-
-proc some*(_: typedesc[int]): int =
-  ## Generate an arbitrary `int`.
-  rand(int)
-
-
-type
-  Property[T: Arbitrary, R: Property | bool] = object
-    ## A `Property` is a representation of a statement about some data.
-    ## Properties are curried by default.
-    test: T -> R
-
-  Testable* = concept t
-    ## A `Testable` is any type that can be converted to a `Property`
-    property(t) is Property
+proc typeFor(ty: NimNode): NimNode =
+  case ty.kind:
+  of nnkSym:
+    return ident(ty.strVal)
+  of nnkBracketExpr:
+    if ty[0].kind == nnkSym and ty[0].strVal == "range":
+      let
+        start = ty[1]
+        stop = ty[2]
+      return quote do:
+        range[`start`..`stop`]
+  else:
+    discard
+  raise newException(ValueError, &"could not handle type: {repr ty}")
 
 
-func property*(p: Property): auto =
-  ## Return the given `Property`.
-  p
+macro test(f: proc): bool =
+  ## Test `f` once.
+  let ty = getType f
+  let n = len(ty) - 2  # Number of parameters
 
-func property*[T; R: Property | bool](f: T -> R): auto =
-  ## A `Property` with a single input.
-  Property[T,R](test: f)
+  # debugEcho treeRepr ty
+  # debugEcho n
+
+  assert ty.kind == nnkBracketExpr
+  # assert ty[0].kind == nnkSym and ty[0].strVal == "proc"  # `f` is a `proc`
+  assert ty[1].kind == nnkSym and ty[1].strVal == "bool"  # `f` should return a `bool`.
+  for i in 2..<n+2:
+    assert ty[i].kind in {nnkSym, nnkBracketExpr}  # all parameters should be symbols or bracket expressions (for the case of ranges)
+
+  result = newCall(f)
+  var pty: NimNode
+  for i in 2..<n+2:
+    pty = typeFor ty[i]
+    result.add quote do:
+      rand(`pty`)
+
+  # debugEcho treeRepr result
 
 
-proc evaluate[T](p: Property[T,bool]): (bool, T) =
-  ## Evaluate a property with a single input once.
-  let x = some(T)
-  (p.test(x), x)
-
-
-proc satisfy*(b: bool): bool =
-  if not b:
-    return false
-  return true
-
-proc satisfy*[T](n: Natural, p: Property[T,bool]): bool =
-  var (flag, x) = evaluate p
-  for i in 1..n:
-    if not flag:
-      echo &"Failed test no. {i}."
-      echo &"there exists {x} such that"
+proc satisfy*(f: proc): bool =
+  ## Test a property.
+  randomize()
+  for i in 0..<1000:
+    if not test f:
       return false
-    (flag, x) = evaluate p
-  echo &"Passed {n} tests."
   return true
-
-proc satisfy*(n: Natural, t: Testable): bool =
-  ## Convert a `Testable` into a `Property` and determine whether the
-  ## `Property` is satisfied.
-  satisfy(n, property t)
-
-proc satisfy*(t: Testable): bool =
-  ## Convert a `Testable` into a `Property` and determine whether the
-  ## `Property` is satisfied. By default, 100 tests are attempted.
-  satisfy(100, t)
