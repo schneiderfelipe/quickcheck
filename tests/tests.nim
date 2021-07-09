@@ -34,7 +34,7 @@ suite "Simple properties with parameters":
 
   test "pass a simple property with more than one parameter":
     check satisfy do (n: int8, m: range[1'i8..int8.high]) -> bool:
-      # range[1...] is used to avoid division by zero
+      # `range[1...]` is used to avoid division by zero
       m * int(n) mod m == 0 # convert to avoid overflow
 
 
@@ -49,3 +49,10 @@ suite "Simple properties that return a result type":
         EvalResult.err "skip to avoid division by zero"
       else:
         EvalResult.ok m * int(n) mod m == 0 # convert to avoid overflow
+
+
+suite "Conditional properties":
+  test "pass a property with a condition":
+    check satisfy do (n, m: int8) -> auto:
+      # `==>` is used to avoid division by zero
+      m != 0 ==> m * int(n) mod m == 0 # convert to avoid overflow
