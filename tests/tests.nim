@@ -55,9 +55,24 @@ suite "Properties with preconditions":
   test "a property with a precondition for integers":
     check satisfy do (n, m: int8) -> auto:
       # `==>` is used to avoid division by zero
-      m != 0 ==> m * int(n) mod m == 0 # convert to avoid overflow
+      m != 0 ==>
+        m * int(n) mod m == 0 # convert to avoid overflow
 
-  test "a property with a precondition for sequences":
+  test "a property with a precondition for sequences that fails":
+    expect(IndexDefect): discard satisfy do (xs: seq[int], n: range[0'i8..high(
+        int8)]) -> auto:
+      xs[n] == xs[n..^1][0]
+
+  test "a property with a precondition for sequences that succeeds":
     check satisfy do (xs: seq[int], n: range[0'i8..high(int8)]) -> auto:
-      # `==>` is used to avoid division by zero
-      n < len(xs) ==> xs[n] == xs[n..^1][0]
+      # `==>` is used to avoid index out of range
+      n < len(xs) ==>
+        xs[n] == xs[n..^1][0]
+
+  test "a property with an impossible precondition":
+    fail satisfy do () -> auto:
+      false ==> true
+
+  test "a property with a rare precondition":
+    fail satisfy do (n: uint8) -> auto:
+      n in {2, 3, 5, 23, 42} ==> true

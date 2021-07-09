@@ -1,15 +1,81 @@
-import macros, random, results, strformat, typetraits
+import macros, random, results, strformat, terminal, typetraits
 export ok
 
 
 template skip*[T, E](R: type Result[T, E], x: auto): Result[T, E] =
-  ## Convenience to skip tests. Synonymous to `Result.err`.
+  ## Convenience to skip checks. Synonymous to `Result.err`.
   R.err x
 
 
-type EvalResult* =
-  Result[bool, string] # TODO: string for now
-  ## Result of a property evaluation.
+type
+  EvalResult* =
+    Result[bool, string] # TODO: string for now
+    ## Result of a single property evaluation.
+
+  TrialState = enum
+    ## Final state of a `TrialResult`.
+    Success, GaveUp, Failure #, NoExpectedFailure
+  TrialResult = object
+    ## Result of a complete property trial.
+    case state: TrialState:
+    of Failure:
+      exception: ref Exception
+    else:
+      discard
+    evals, succs, skips: Natural
+    # , fails?
+
+
+converter toBool(r: TrialResult): bool =
+  ## Convert a `TrialResult` to `bool`.
+  case r.state:
+  of Success: return true
+  of Failure, GaveUp: return false
+
+
+proc trigger(r: TrialResult): bool =
+  ## Display a `TrialResult`, return its equivalent `bool` value and, if
+  ## applicable, raise an exception.
+  func s(n: Natural): string =
+    if n > 1 or n == 0:
+      "s"
+    else:
+      ""
+
+
+  proc displayMsg(pref, msg: string, prefFg: ForegroundColor) =
+    stdout.styledWriteLine(styleBright, prefFg, "  ", pref, resetStyle, msg)
+
+
+  proc displaySucc(succ: Natural) =
+    displayMsg("+++ ", &"OK, passed {succ} quick check{s(succ)}.", fgCyan)
+
+
+  proc displayGave(succ: Natural) =
+    displayMsg("*** ", &"Gave up! Passed only {succ} quick check{s(succ)}.", fgMagenta)
+
+
+  proc displayFail(headline: string, n: Natural) =
+    displayMsg("*** ", &"{headline}! Falsifiable (after {n} quick check{s(n)}):", fgMagenta)
+    # TODO: in order to show a counter-example, we can enhance the result
+    # type to return the given parameters.
+
+
+  case r.state:
+  of Success:
+    displaySucc(r.succs)
+  of Failure:
+    # TODO: in order to show a counter-example, we can enhance the result
+    # type to return the given parameters.
+    if isNil(r.exception):
+      displayFail("Failed", r.evals)
+    else:
+      displayFail("Raised", r.evals)
+      raise r.exception
+  of GaveUp:
+    displayGave(r.succs)
+
+  r.toBool
 
 
 template someImpl(T: typedesc): auto =
@@ -51,6 +117,7 @@ func toUntyped(n: NimNode): NimNode =
       for ch in n:
         result.add ch.toUntyped
 
+
   case n.kind:
   of nnkSym:
     result = ident n.strVal
@@ -87,12 +154,14 @@ macro eval(f: proc): EvalResult =
     for i in 2..<n+2:
       ty[i].expectKind {nnkSym, nnkBracketExpr}
 
+
   func callWithSome(f: NimNode): NimNode =
     let
       ty = getType f
 
       # Number of parameters of `f`
       n = len(ty) - 2
+
 
     validateProcType(ty, n)
 
@@ -110,16 +179,36 @@ macro eval(f: proc): EvalResult =
   callWithSome f
 
 
+# TODO: we currently ignore left values.
 proc satisfy*(f: proc): bool =
-  ## Test a property. This means evaluating it many times and check if they
+  ## Check a property. This means evaluating it many times and check if they
   ## all succeed.
-  var res: EvalResult
-  for i in 0..<1000:
-    res = eval f
-    if res.isOk and not res.get:
-      # TODO: we currently ignore left values.
-      return false
-  return true
+  proc satisfyImpl(f: proc): TrialResult =
+    const
+      maxsuccs = 100
+      maxevals = 1000
+    var
+      evals = 1
+      succs = 0
+      res: EvalResult
+    while evals <= maxevals:
+      try:
+        res = eval f
+      except:
+        return TrialResult(state: Failure, evals: evals, succs: succs,
+            exception: getCurrentException())
+      if res.isOk:
+        if not res.get:
+          return TrialResult(state: Failure, evals: evals, succs: succs,
+              exception: getCurrentException())
+        inc succs
+      if succs >= maxsuccs:
+        return TrialResult(state: Success, evals: evals, succs: succs)
+      inc evals
+    return TrialResult(state: GaveUp, evals: evals, succs: succs)
+
+
+  trigger satisfyImpl f
 
 
 # TODO: we use a template because we what things to be lazy: if `p` is not
