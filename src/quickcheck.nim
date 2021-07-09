@@ -79,3 +79,13 @@ proc satisfy*(f: proc): bool =
       # TODO: we currently ignore `err`
       return false
   return true
+
+
+# TODO: we use a template because we what things to be lazy: if `p` is not
+# satisfied, we should still evaluating `f`.
+template `==>`*(p, f: bool): EvalResult =
+  ## Produce a new property that meaning "`p` implies `f`".
+  if not p:
+    EvalResult.err "skip due to unsatisfied predicate"
+  else:
+    EvalResult.ok f
