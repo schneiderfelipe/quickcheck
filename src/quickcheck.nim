@@ -2,15 +2,11 @@ import macros, random, results, strformat, terminal, typetraits
 export ok
 
 
-template skip*[T, E](R: type Result[T, E], x: auto): Result[T, E] =
-  ## Convenience to skip checks. Synonymous to `Result.err`.
-  R.err x
-
-
 type
-  EvalResult* =
-    Result[bool, string] # TODO: string for now
-    ## Result of a single property evaluation.
+  EvalResult*[T] =
+    Result[bool, (T, string)]
+    ## Result of a single property evaluation. The error part contains an
+    ## evaluation counter-example and an optional message.
 
   TrialState = enum
     ## Final state of a `TrialResult`.
@@ -24,6 +20,24 @@ type
       discard
     evals, succs, skips: Natural
     # , fails?
+
+
+template skip*[T](R: type EvalResult[T], x: T, s = ""): EvalResult[T] =
+  ## Convenience to skip checks.
+  R.err (x, s)
+
+
+template skip*[T](R: type EvalResult[T], s = ""): EvalResult[T] =
+  ## Convenience to skip checks when the current parameter is not important.
+  var x: T
+  R.skip(x, s)
+
+
+template skip*(R: type EvalResult[void], s = ""): EvalResult[void] =
+  ## Convenience to skip checks when the current parameter is not important.
+  var r: (void, string)
+  r[1] = s
+  R.err r
 
 
 converter toBool(r: TrialResult): bool =
@@ -96,6 +110,7 @@ template someImpl(T: typedesc): auto =
   res
 
 
+# TODO: support strings and functions
 proc some*(T: typedesc): T =
   ## Generate an arbitrary value of type `T`.
   someImpl T
@@ -138,30 +153,60 @@ func toUntyped(n: NimNode): NimNode =
     result = n.toUntypedGeneric
 
 
-macro eval(f: proc): EvalResult =
-  ## Evaluate function `f` once with arbitrary arguments. If
-  ## `f` does not return an `EvalResult`, it will be wrapped in it, i.e.,
-  ## `EvalResult.ok f(...)`.
-  func validateProcType(ty: NimNode, n: Natural) =
-    # - `f` must be a `proc`
-    # - `f` must return either a `bool` or a `Result`
-    # - `f` parameters should be symbols or bracket expressions (for the case of ranges)
-    ty.expectKind nnkBracketExpr
-    ty[0].expectKind nnkSym
-    assert ty[0].strVal == "proc"
-    ty[1].expectKind nnkSym
-    assert ty[1].strVal in ["bool", "Result"]
+func validateProcType(ty: NimNode, n: Natural) =
+  # - `f` must be a `proc`
+  # - `f` must return either a `bool` or a `Result`
+  # - `f` parameters should be symbols or bracket expressions (for the case of ranges)
+  ty.expectKind nnkBracketExpr
+  ty[0].expectKind nnkSym
+  assert ty[0].strVal == "proc"
+  ty[1].expectKind nnkSym
+  assert ty[1].strVal in ["bool", "Result"]
+  for i in 2..<n+2:
+    ty[i].expectKind {nnkSym, nnkBracketExpr}
+
+
+func getTypeOfParamsImpl(f: NimNode): NimNode =
+  let
+    ty = getType f
+    # Number of parameters of `f`
+    n = len(ty) - 2
+
+  validateProcType(ty, n)
+
+  if n > 0:
+    result = newPar()
     for i in 2..<n+2:
-      ty[i].expectKind {nnkSym, nnkBracketExpr}
+      result.add toUntyped ty[i]
+  else:
+    result = quote do:
+      void
+
+
+macro getTypeOfParams(f: proc): typedesc =
+  getTypeOfParamsImpl(f)
+
+
+macro eval(f: proc): auto =
+  ## Evaluate function `f` once with arbitrary arguments. If
+  ## `f` does not return an `EvalResult[T]`, it will be wrapped in it, i.e.,
+  ## `EvalResult[T].ok f(...)`.
+  func getRetType(f: NimNode): NimNode =
+    let
+      ty = getType f
+      # Number of parameters of `f`
+      n = len(ty) - 2
+
+    validateProcType(ty, n)
+
+    result = ty[1]
 
 
   func callWithSome(f: NimNode): NimNode =
     let
       ty = getType f
-
       # Number of parameters of `f`
       n = len(ty) - 2
-
 
     validateProcType(ty, n)
 
@@ -172,9 +217,10 @@ macro eval(f: proc): EvalResult =
       result.add quote do:
         some(`pty`)
 
-    if ty[1].strVal == "bool":
+    let typ = getTypeOfParamsImpl(f)
+    if getRetType(f).strVal == "bool":
       result = quote do:
-        EvalResult.ok `result`
+        EvalResult[`typ`].ok `result`
 
   callWithSome f
 
@@ -184,13 +230,14 @@ proc satisfy*(f: proc): bool =
   ## Check a property. This means evaluating it many times and check if they
   ## all succeed.
   proc satisfyImpl(f: proc): TrialResult =
+    type T = getTypeOfParams(f)
     const
       maxsuccs = 100
       maxevals = 1000
     var
       evals = 1
       succs = 0
-      res: EvalResult
+      res: EvalResult[T]
     while evals <= maxevals:
       try:
         res = eval f
@@ -213,9 +260,9 @@ proc satisfy*(f: proc): bool =
 
 # TODO: we use a template because we what things to be lazy: if `p` is not
 # satisfied, we should still evaluating `f`.
-template `==>`*(p, f: bool): EvalResult =
+template `==>`*(p, f: bool): auto =
   ## Produce a new property that meaning "`p` implies `f`".
   if not p:
-    EvalResult.skip "precondition fails"
+    typeof(result).skip "precondition fails"
   else:
-    EvalResult.ok f
+    typeof(result).ok f
