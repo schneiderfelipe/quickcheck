@@ -1,5 +1,7 @@
 import unittest, quickcheck
 
+# randomize()
+
 
 # https://github.com/nim-lang/Nim/issues/18466
 template fail(conditions: auto): auto =
@@ -22,10 +24,10 @@ suite "Simple properties with parameters":
     check satisfy do (_: int) -> bool:
       true
 
-  test "pass a simple property with a used parameter":
+  test "pass a simple property with a single parameter":
     check satisfy do (n: range[0..50]) -> bool:
       0 <= n and n <= 50
 
   test "pass a simple property with more than one parameter":
-    check satisfy do (n: int8) -> bool:
-      2 * int(n) mod 2 == 0 # convert to avoid overflow
+    check satisfy do (n: int8, m: range[1'i8..int8.high]) -> bool:
+      m * int(n) mod m == 0 # convert to avoid overflow
