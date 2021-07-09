@@ -21,11 +21,11 @@ suite "Simple properties with parameters":
   test "pass a simple property with an ignored parameter":
     check satisfy do (_: int) -> bool:
       true
-  
+
   test "pass a simple property with a used parameter":
     check satisfy do (n: range[0..50]) -> bool:
       0 <= n and n <= 50
 
   test "pass a simple property with more than one parameter":
     check satisfy do (n: int8) -> bool:
-      2 * int(n) mod 2 == 0  # convert to avoid overflow
+      2 * int(n) mod 2 == 0 # convert to avoid overflow

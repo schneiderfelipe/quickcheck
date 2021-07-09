@@ -1,7 +1,7 @@
 import macros, random, strformat
 
 
-proc typeFor(ty: NimNode): NimNode =
+proc rebuildType(ty: NimNode): NimNode =
   case ty.kind:
   of nnkSym:
     return ident(ty.strVal)
@@ -20,21 +20,21 @@ proc typeFor(ty: NimNode): NimNode =
 macro test(f: proc): bool =
   ## Test `f` once.
   let ty = getType f
-  let n = len(ty) - 2  # Number of parameters
+  let n = len(ty) - 2 # Number of parameters
 
   # debugEcho treeRepr ty
   # debugEcho n
 
   assert ty.kind == nnkBracketExpr
   # assert ty[0].kind == nnkSym and ty[0].strVal == "proc"  # `f` is a `proc`
-  assert ty[1].kind == nnkSym and ty[1].strVal == "bool"  # `f` should return a `bool`.
+  assert ty[1].kind == nnkSym and ty[1].strVal == "bool" # `f` should return a `bool`.
   for i in 2..<n+2:
-    assert ty[i].kind in {nnkSym, nnkBracketExpr}  # all parameters should be symbols or bracket expressions (for the case of ranges)
+    assert ty[i].kind in {nnkSym, nnkBracketExpr} # all parameters should be symbols or bracket expressions (for the case of ranges)
 
   result = newCall(f)
   var pty: NimNode
   for i in 2..<n+2:
-    pty = typeFor ty[i]
+    pty = rebuildType ty[i]
     result.add quote do:
       rand(`pty`)
 
