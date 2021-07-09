@@ -1,6 +1,6 @@
 import unittest, sugar, quickcheck
 
-# randomize()
+# randomize
 
 
 # https://github.com/nim-lang/Nim/issues/18466
@@ -10,11 +10,11 @@ template fail(conditions: auto): auto =
 
 
 suite "Trivial functionality":
-  test "pass a successful trivial property":
+  test "a successful trivial property":
     check satisfy do () -> bool:
       true
 
-  test "don't pass a failing trivial property":
+  test "a failing trivial property":
     fail satisfy do () -> bool:
       false
 
@@ -24,35 +24,40 @@ suite "Trivial functionality":
 
 
 suite "Simple properties with parameters":
-  test "pass a simple property with an ignored parameter":
+  test "a simple property with an ignored parameter":
     check satisfy do (_: int) -> bool:
       true
 
-  test "pass a simple property with a single parameter":
+  test "a simple property with a single parameter":
     check satisfy do (n: range[0..50]) -> bool:
       0 <= n and n <= 50
 
-  test "pass a simple property with more than one parameter":
-    check satisfy do (n: int8, m: range[1'i8..int8.high]) -> bool:
+  test "a simple property with more than one parameter":
+    check satisfy do (n: int8, m: range[1'i8..high(int8)]) -> bool:
       # `range[1...]` is used to avoid division by zero
       m * int(n) mod m == 0 # convert to avoid overflow
 
 
 suite "Simple properties that return a result type":
-  test "pass a simple property that returns a result type that is always `Ok`":
+  test "a simple property that returns a result type that is always `Ok`":
     check satisfy do (_: int) -> EvalResult:
       EvalResult.ok true
 
-  test "pass a simple property that returns a result type that is *not* always `Ok`":
+  test "a simple property that returns a result type that is *not* always `Ok`":
     check satisfy do (n, m: int8) -> EvalResult:
       if m == 0:
-        EvalResult.err "skip to avoid division by zero"
+        EvalResult.skip "avoid division by zero"
       else:
         EvalResult.ok m * int(n) mod m == 0 # convert to avoid overflow
 
 
-suite "Conditional properties":
-  test "pass a property with a condition":
+suite "Properties with preconditions":
+  test "a property with a precondition for integers":
     check satisfy do (n, m: int8) -> auto:
       # `==>` is used to avoid division by zero
       m != 0 ==> m * int(n) mod m == 0 # convert to avoid overflow
+
+  test "a property with a precondition for sequences":
+    check satisfy do (xs: seq[int], n: range[0'i8..high(int8)]) -> auto:
+      # `==>` is used to avoid division by zero
+      n < len(xs) ==> xs[n] == xs[n..^1][0]
