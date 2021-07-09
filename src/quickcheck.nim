@@ -1,7 +1,8 @@
 import macros, random, strformat
 
 
-proc rebuildType(ty: NimNode): NimNode =
+func rebuildType(ty: NimNode): NimNode =
+  ## Reconstruct code for type from a `NimNode` for type.
   case ty.kind:
   of nnkSym:
     return ident(ty.strVal)
@@ -17,19 +18,27 @@ proc rebuildType(ty: NimNode): NimNode =
   raise newException(ValueError, &"could not handle type: {repr ty}")
 
 
-macro test(f: proc): bool =
-  ## Test `f` once.
-  let ty = getType f
-  let n = len(ty) - 2 # Number of parameters
+func randCall(f: NimNode): NimNode =
+  ## Generate code for a call to a function `f` with random arguments.
+  let
+    ty = getType f
 
-  # debugEcho treeRepr ty
-  # debugEcho n
+    # Number of parameters of `f`
+    n = len(ty) - 2
 
-  assert ty.kind == nnkBracketExpr
-  # assert ty[0].kind == nnkSym and ty[0].strVal == "proc"  # `f` is a `proc`
-  assert ty[1].kind == nnkSym and ty[1].strVal == "bool" # `f` should return a `bool`.
+
+  # Validate `NimNode`:
+  # - `f` must be a `proc`
+  # - `f` must return a `bool`
+  # - `f` parameters should be symbols or bracket expressions (for the case of ranges)
+  ty.expectKind nnkBracketExpr
+  ty[0].expectKind nnkSym
+  assert ty[0].strVal == "proc"
+  ty[1].expectKind nnkSym
+  assert ty[1].strVal == "bool"
   for i in 2..<n+2:
-    assert ty[i].kind in {nnkSym, nnkBracketExpr} # all parameters should be symbols or bracket expressions (for the case of ranges)
+    ty[i].expectKind {nnkSym, nnkBracketExpr}
+
 
   result = newCall(f)
   var pty: NimNode
@@ -38,13 +47,15 @@ macro test(f: proc): bool =
     result.add quote do:
       rand(`pty`)
 
-  # debugEcho treeRepr result
+
+macro test(f: proc): bool =
+  ## Test `f` once with random arguments.
+  randCall(f)
 
 
 proc satisfy*(f: proc): bool =
   ## Test a property.
-  randomize()
-  for i in 0..<1000:
+  for i in 0..<100:
     if not test f:
       return false
   return true
