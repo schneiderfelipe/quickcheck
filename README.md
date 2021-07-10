@@ -2,6 +2,23 @@
 
 Property-based, type-based testing for Nim.
 
+```nim
+import unittest, quickcheck, algorithm
+
+test "some invariants of the `reversed` function":
+  check satisfy do (xs: string) -> bool:
+    xs.reversed.reversed == xs
+
+  check satisfy do (xs, ys: string) -> bool:
+    (xs & ys).reversed == ys.reversed & xs.reversed
+```
+
+```
+  +++ OK, passed 100 quick checks.
+  +++ OK, passed 100 quick checks.
+[OK] some invariants of the `reversed` function
+```
+
 It works with [`unittest`](https://nim-lang.org/docs/unittest.html), as a
 standalone library (and probably with `testament`) and is inspired by
 [QuickCheck](https://hackage.haskell.org/package/QuickCheck) and

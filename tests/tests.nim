@@ -1,4 +1,4 @@
-import unittest, sugar, quickcheck
+import unittest, quickcheck, algorithm, sugar
 
 # randomize
 
@@ -76,3 +76,15 @@ suite "Properties with preconditions":
   test "a property with a rare precondition":
     fail satisfy do (n: uint8) -> auto:
       n in {2, 3, 5, 23, 42} ==> true
+
+
+suite "Simple use cases":
+  test "some invariants of the `reversed` function":
+    check satisfy do (xs: string) -> bool:
+      xs.reversed.reversed == xs
+
+    fail satisfy do (xs, ys: string) -> bool:
+      (xs & ys).reversed == xs.reversed & ys.reversed
+
+    check satisfy do (xs, ys: string) -> bool:
+      (xs & ys).reversed == ys.reversed & xs.reversed
