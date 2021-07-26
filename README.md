@@ -1,3 +1,7 @@
+**WARNING**: this project has been retired.
+For a Rust-based alternative, see
+[BurntSushi/quickcheck](https://github.com/BurntSushi/quickcheck).
+
 # quickcheck
 
 Property-based, type-based testing for Nim.
@@ -26,9 +30,9 @@ standalone library (and probably with `testament`) and is inspired by
 
 ## Inspiring projects
 
-- [QuickCheck](https://hackage.haskell.org/package/QuickCheck) (Haskell)
-- [SmallCheck](https://hackage.haskell.org/package/smallcheck) (Haskell)
+-   [QuickCheck](https://hackage.haskell.org/package/QuickCheck) (Haskell)
+-   [SmallCheck](https://hackage.haskell.org/package/smallcheck) (Haskell)
 
 ## References
 
-- [Claessen, K.; Hughes, J. QuickCheck. SIGPLAN Not. 2011, 46 (4), 53–64.](https://doi.org/10.1145/1988042.1988046)
+-   [Claessen, K.; Hughes, J. QuickCheck. SIGPLAN Not. 2011, 46 (4), 53–64.](https://doi.org/10.1145/1988042.1988046)
